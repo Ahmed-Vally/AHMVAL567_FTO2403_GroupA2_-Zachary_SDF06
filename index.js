@@ -3,7 +3,7 @@ Challenge:
 Make it so that when you click the 'Add to cart' button, whatever is written in the input field should be console logged.
 */
 import { initializeApp} from "https://www.gstatic.com/firebasejs/9.15.0/firebase-app.js"
-import { getDatabase, ref, push, onValue  } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-database.js"
+import { getDatabase, ref, push, onValue, remove } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-database.js"
 
 const appSettings = {
     databaseURL: "https://realtime-database-663e3-default-rtdb.firebaseio.com/"
@@ -27,17 +27,21 @@ addButtonEl.addEventListener("click", function() {
 })
 
 onValue(shoppingListInDB, function(snapshot) {
-    let itemsArray = Object.entries(snapshot.val())
+
+    if (snapshot.exists()) {
+        let itemsArray = Object.entries(snapshot.val())
     
-    clearShoppingListEl()
-    
-    for (let i = 0; i < itemsArray.length; i++) {
-        let currentItem = itemsArray[i]
-      
-        let currentItemID = currentItem[0]
-        let currentItemValue = currentItem[1]
+        clearShoppingListEl()
         
-        appendItemToShoppingListEl (currentItemValue)
+        for (let i = 0; i < itemsArray.length; i++) {
+            let currentItem = itemsArray[i]
+            let currentItemID = currentItem[0]
+            let currentItemValue = currentItem[1]
+            
+            appendItemToShoppingListEl(currentItem)
+        }    
+    } else {
+        shoppingListEl.innerHTML = "No items here... yet"
     }
 })
 
@@ -49,6 +53,21 @@ function clearInputFieldEl() {
     inputFieldEl.value = ""
 }
 
-function appendItemToShoppingListEl(itemValue) {
-    shoppingListEl.innerHTML += `<li>${itemValue}</li>`
+function appendItemToShoppingListEl(item) {
+    let itemID = item[0]
+    let itemValue = item[1]
+    
+    let newEl = document.createElement("li")
+    
+    newEl.textContent = itemValue
+
+    newEl.addEventListener("click", function () {
+
+        let exactLocationOfItemInDB = ref(database, `shoppingList/${itemID}`)
+        remove(exactLocationOfItemInDB)
+
+
+    })
+    
+    shoppingListEl.append(newEl)
 }
